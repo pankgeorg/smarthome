@@ -1,0 +1,15 @@
+{
+  "name": "weather-station",
+  "version": "1.0.0",
+  "description": "Lua codebase for weather station controlling",
+  "main": "init.lua",
+  "dependencies": {},
+  "devDependencies": {
+    "nodemcu-tool": "^3.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "pankgeorg@gmail.com",
+  "license": "UNLICENSED"
+}
