@@ -34,6 +34,8 @@
 Sometimes `nodemcu-tool` just doesn't upload the whole code (and the interpreter complains for non-ending blocks of code that *do* end).
 
 Try the following:
-1. Retry
-2. Unplug \& plug the device
-3. Format new firmware (erasing flash)
+
+1. Unplug \& plug the device
+2. Open Putty real fast and type `file.remove('init.lua')`
+3. Confirm that the console is stable (prompts you: `>` and doesn't print anything)
+4. Re-upload code & `init.lua`

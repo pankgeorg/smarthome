@@ -7,8 +7,8 @@ latestWater = tmr.now() -- Water timer
 latestDeg = 0 -- Latest +
 voltageReadings = 1000
 now = tmr.now()
-gust = 0
-gustTime = tmr.now()
+gustSpeed = 0
+windSpeed = 0
 
 function read_voltage()
     local c = 0
@@ -56,10 +56,6 @@ do
         windSpeed = 2.4 / du
         print("wind, du =", windSpeed, ", ", du)
         pulse1 = pulse2
-        if (gustTime > pulse2 + 10 * 60 * 1000 * 1000 or windSpeed > gustSpeed) then -- 10 minutes later or bigger gust
-            gustTime = pulse2
-            gustSpeed = windSpeed
-        end
         gpio.trig(pin, level == gpio.HIGH and "down" or "up")
     end
     gpio.trig(pin, "down", pin12wind)
@@ -193,3 +189,5 @@ globalTimer =
         read_all()
     end
 )
+
+print("Loaded sensor.lua")
