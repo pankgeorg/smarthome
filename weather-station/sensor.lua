@@ -32,8 +32,8 @@ do
             return
         end
         waterCount = waterCount + 1
-        print(level, pulse2 - pulse1)
-        du = math.max(pulse2 - pulse1, 2 ^ 31 + pulse2 - pulse1) * 0.000001 + 0.001
+        diff = (pulse2 > pulse1) and (pulse2 - pulse1) or (2 ^ 31 + pulse2 - pulse1)
+        du = diff * 0.000001 + 0.001
         waterVolume = 0.274 * 3600 / du
         print("water, du =", waterCount, ", ", du)
         pulse1 = pulse2
@@ -51,10 +51,10 @@ do
             return
         end
         windCount = windCount + 1
-        print(level, pulse2 - pulse1)
-        du = math.max(pulse2 - pulse1, 2 ^ 31 + pulse2 - pulse1) * 0.000001 + 0.001
+        diff = (pulse2 > pulse1) and (pulse2 - pulse1) or (2 ^ 31 + pulse2 - pulse1)
+        du = diff * 0.000001 + 0.001
         windSpeed = 2.4 / du
-        print("wind, du =", windSpeed, ", ", du)
+        print("wind ", windSpeed, ", du ", du)
         pulse1 = pulse2
         gpio.trig(pin, level == gpio.HIGH and "down" or "up")
     end
@@ -78,9 +78,14 @@ tmr.delay(100000)
 -- 5    oversampling ×16
 
 -- temp, pressure, humidity, heater_temp, heater_duration, IIR_coeff, cold_start
-tmr.delay(delayuS)
 s = bme680.setup()
 tmr.delay(delayuS)
+tmr.delay(delayuS)
+if s == nil then
+    print("Sensor not initialized")
+    tmr.delay(60 * delayuS)
+    node.restart()
+end
 -- delay calculated by formula provided by Bosch: 121 ms, minimum working (empirical): 150 ms
 
 function read_bme680()
@@ -131,7 +136,8 @@ function read_all()
     dewp = string.format("%s%.2f", Dsgn < 0 and "-" or "", D / 100)
     humd = string.format("%.3f", H / 1000)
     gustSpeed = windSpeed
-    du = math.max(now - latestWind, 2 ^ 31 + now - latestWind) * 0.000001 + 0.001
+    diff = (now > latestWind) and (now - latestWind) or (2 ^ 31 + now - latestWind)
+    du = diff * 0.000001 + 0.001
     windAverage = 2.4 * windCount / du
     waterAverage = waterVolume * waterCount / ((now - latestWater) / 3600)
     latestDeg = voltage_to_deg(V)
@@ -178,8 +184,6 @@ function read_all()
         end
     )
 end
-
-print("Loaded sensor.lua")
 
 globalTimer =
     tmr.create():alarm(
