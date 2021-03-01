@@ -53,7 +53,7 @@ do
         windCount = windCount + 1
         diff = (pulse2 > pulse1) and (pulse2 - pulse1) or (2 ^ 31 + pulse2 - pulse1)
         du = diff * 0.000001 + 0.001
-        windSpeed = 2.4 / du
+        windSpeed = math.max(2.4 / du, windSpeed) -- This will be the max gust speed between HTTP calls
         print("wind ", windSpeed, ", du ", du)
         pulse1 = pulse2
         gpio.trig(pin, level == gpio.HIGH and "down" or "up")
@@ -180,6 +180,7 @@ function read_all()
                 waterCount = 0
                 latestWind = now
                 windCount = 0
+                windSpeed = 0
             end
         end
     )
