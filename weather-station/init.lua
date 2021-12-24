@@ -3,10 +3,11 @@ dofile("credentials.lua")
 
 -- Node settings
 
-wifi.setmaxtxpower(40)
-
+-- wifi.setmaxtxpower(40)
+stop = false
 function startup()
-  if file.open("init.lua") == nil then
+  -- filex`.remove("init.lua")
+  if stop == true or file.open("init.lua") == nil then
     print("init.lua deleted or renamed")
   else
     print("Running")
@@ -17,18 +18,18 @@ function startup()
 end
 
 -- Define WiFi station event callbacks
-wifi_connect_event = function(T)
-  print("Connection to AP(" .. T.SSID .. ") established!")
+wifi_connect_event = function(e, info)
+  print("Connection to AP(" .. (info.ssid or "no ssid") .. ") established!")
   print("Waiting for IP address...")
   if disconnect_ct ~= nil then
     disconnect_ct = nil
   end
 end
 
-wifi_got_ip_event = function(T)
+wifi_got_ip_event = function(e, info)
   -- Note: Having an IP address does not mean there is internet access!
   -- Internet connectivity can be determined with net.dns.resolve().
-  print("Wifi connection is ready! IP address is: " .. T.IP)
+  print("Wifi connection is ready! IP address is: " .. (info.ip or "no ip"))
   print("Startup will resume momentarily, you have 3 seconds to abort.")
   print("Waiting...")
   tmr.create():alarm(3000, tmr.ALARM_SINGLE, startup)
@@ -67,11 +68,14 @@ wifi_disconnect_event = function(T)
 end
 
 -- Register WiFi Station event callbacks
-wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, wifi_connect_event)
-wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_got_ip_event)
-wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_disconnect_event)
+wifi.mode(wifi.STATION, true)
+
+wifi.sta.on("connected", wifi_connect_event)
+wifi.sta.on("got_ip", wifi_got_ip_event)
+wifi.sta.on("disconnected", wifi_disconnect_event)
 
 print("Connecting to WiFi access point...")
-wifi.setmode(wifi.STATION)
-wifi.sta.config({ssid = SSID, pwd = PASSWORD})
+wifi.start()
+
+wifi.sta.config({ssid = SSID, pwd = PASSWORD}, true)
 -- wifi.sta.connect() not necessary because config() uses auto-connect=true by default

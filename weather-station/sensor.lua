@@ -1,15 +1,20 @@
+function now()
+    sec, usec = time.get()
+    return 1000 * sec + usec
+end
+
 waterCapacity = 0.274 -- mm per click
 delayuS = 1000000 -- Set delay in microSecond. here 1 second
 windCount = 0 -- Wind clicks
-latestWind = tmr.now() -- Wind timer
+latestWind = now() -- Wind timer
 waterCount = 0 -- Water clicks
-latestWater = tmr.now() -- Water timer
+latestWater = now() -- Water timer
 latestDeg = 0 -- Latest +
 voltageReadings = 1000
-now = tmr.now()
+now = now()
 gustSpeed = 0
 windSpeed = 0
-
+print("TEST")
 function read_voltage()
     local c = 0
     local s = 0
@@ -26,7 +31,8 @@ end
 do
     waterVolume = 0
     local pin, pulse1, du = 5, 0, 0 -- pin14 (14==5)
-    gpio.mode(pin, gpio.INT, gpio.PULLUP)
+    -- gpio.mode(pin, gpio.INT, gpio.PULLUP)
+    gpio.config({gpio=pin, dir=gpio.IN, pull=gpio.PULLUP})
     local function pin14water(level, pulse2)
         if (level == 0) then
             return
@@ -37,15 +43,16 @@ do
         waterVolume = 0.274 * 3600 / du
         print("water, du =", waterCount, ", ", du)
         pulse1 = pulse2
-        gpio.trig(pin, level == gpio.HIGH and "down" or "up")
+        gpio.trig(pin, level == gpio.HIGH and  gpio.INTR_UP or  gpio.INTR_DOWN)
     end
-    gpio.trig(pin, "down", pin14water)
+    gpio.trig(pin, gpio.INTR_DOWN, pin14water)
 end
 
 do
     windSpeed = 0
     local pin, pulse1, du = 6, 0, 0 -- pin12 (14==5)
-    gpio.mode(pin, gpio.INT, gpio.PULLUP)
+    -- gpio.mode(pin, gpio.INT, gpio.PULLUP)
+    gpio.config({gpio=pin, dir=gpio.IN, pull=gpio.PULLUP})
     local function pin12wind(level, pulse2)
         if (level == 0) then
             return
@@ -56,9 +63,9 @@ do
         windSpeed = math.max(2.4 / du, windSpeed) -- This will be the max gust speed between HTTP calls
         print("wind ", windSpeed, ", du ", du)
         pulse1 = pulse2
-        gpio.trig(pin, level == gpio.HIGH and "down" or "up")
+        gpio.trig(pin, level == gpio.HIGH and  gpio.INTR_UP or  gpio.INTR_DOWN)
     end
-    gpio.trig(pin, "down", pin12wind)
+    gpio.trig(pin, gpio.INTR_DOWN, pin12wind)
 end
 
 delayuS = 1000000 -- Set delay in microSecond. here 1 second
@@ -86,6 +93,7 @@ if s == nil then
     tmr.delay(60 * delayuS)
     node.restart()
 end
+print("Sensor initialized")
 -- delay calculated by formula provided by Bosch: 121 ms, minimum working (empirical): 150 ms
 
 function read_bme680()
@@ -123,7 +131,7 @@ function voltage_to_deg(vin)
 end
 
 function read_all()
-    now = tmr.now()
+    now = now()
     bme680.startreadout(300, read_bme680)
     V = read_voltage()
     tmr.delay(10000)
